@@ -2,6 +2,5 @@
 .idea/
 __pycache__/
 *.py[cod]
-.panda_signing_key
 .env
 *.log
