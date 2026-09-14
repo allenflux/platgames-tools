@@ -9,6 +9,7 @@ from ipaddress import ip_address
 from urllib.parse import unquote, unquote_plus, urlsplit
 
 from make_panda_natural_free_token import issue_token, jwt_encode
+from vendor_config import PANDA_CONFIG
 
 
 MAX_INPUT_LENGTH = 60 * 1024
@@ -116,7 +117,7 @@ def _generate_panda(request: dict) -> dict:
         )
     except (ValueError, TypeError, KeyError, OverflowError) as exc:
         if "PANDA_JWT_SECRET" in str(exc):
-            message = "服务尚未配置 Panda 签名密钥，请设置 PANDA_JWT_SECRET 后重启服务。"
+            message = "请检查 config/private/panda_signing.key，或设置 PANDA_JWT_SECRET 后重启服务。"
         elif "test merchant" in str(exc):
             message = "该链接不属于支持的 Panda 测试商户，请使用测试环境的游戏链接。"
         elif "session fields" in str(exc):
@@ -127,10 +128,12 @@ def _generate_panda(request: dict) -> dict:
 
     segments = [unquote(segment) for segment in urlsplit(url).path.split("/") if segment]
     game = segments[-2] if len(segments) >= 2 and "." in segments[-1] else (segments[-1] if segments else "Panda")
+    game_info = next((value for value in PANDA_CONFIG["games"].values() if value["name"] == game), {})
     return {
         "vendor": "panda",
         "tool": "natural-free-token",
         "game": game,
+        "game_name": game_info.get("desc", game),
         # Splice only the token value; preserve the exact query encoding,
         # parameter order, duplicates, path, host, and fragment supplied.
         "url": url[:start] + new_token + url[end:],

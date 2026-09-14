@@ -11,13 +11,19 @@ import os
 import re
 from pathlib import Path
 
+from vendor_config import PANDA_CONFIG
+
 
 def _load_key() -> str:
     environment_key = os.environ.get("PANDA_JWT_SECRET", "").strip()
     if environment_key:
         return environment_key
     configured_file = os.environ.get("PANDA_JWT_SECRET_FILE", "").strip()
-    key_file = Path(configured_file).expanduser() if configured_file else Path(__file__).with_name(".panda_signing_key")
+    key_file = (
+        Path(configured_file).expanduser()
+        if configured_file
+        else Path(__file__).resolve().parent / PANDA_CONFIG["signing_key_file"]
+    )
     try:
         return key_file.read_text(encoding="utf-8").strip()
     except (OSError, UnicodeError):
@@ -32,7 +38,7 @@ PUBLIC_KEY = _load_key()
 def _secret_bytes(secret: str | None) -> bytes:
     configured = PUBLIC_KEY if secret is None else secret
     if not isinstance(configured, str) or not configured.strip():
-        raise ValueError("未配置 Panda JWT 签名密钥，请设置 PANDA_JWT_SECRET、PANDA_JWT_SECRET_FILE 或 .panda_signing_key。")
+        raise ValueError("未配置 Panda JWT 签名密钥，请检查 config/private/panda_signing.key 或 PANDA_JWT_SECRET。")
     return configured.encode("utf-8")
 
 

@@ -5,7 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY vendor_debug_server.py vendor_debug_tokens.py make_panda_natural_free_token.py panda_jwt.py ./
+COPY vendor_debug_server.py vendor_debug_tokens.py make_panda_natural_free_token.py panda_jwt.py vendor_config.py ./
+COPY config/vendors/ ./config/vendors/
 COPY vendor_debug_web/ ./vendor_debug_web/
 
 EXPOSE 9100

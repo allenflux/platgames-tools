@@ -230,19 +230,24 @@ class DebugToolHTTPTests(unittest.TestCase):
         if request is None:
             request = {"url": launch_url(sign(source_payload()))}
         if headers is None:
-            headers = {"Content-Type": "application/json", "X-Debug-Tool": "1"}
+            headers = {"Content-Type": "application/json"}
         return self.request("POST", "/api/generate", json.dumps(request), headers)
 
     def assert_no_store(self, headers):
         normalized = {key.lower(): value for key, value in headers.items()}
         self.assertIn("no-store", normalized.get("cache-control", ""))
+        self.assertEqual(normalized.get("access-control-allow-origin"), "*")
+        self.assertNotIn("content-security-policy", normalized)
+        self.assertNotIn("x-frame-options", normalized)
 
     def test_health_registry_and_ui(self) -> None:
-        status, _, body = self.request("GET", "/api/health")
+        status, headers, body = self.request("GET", "/api/health")
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body), {"ok": True})
-        status, _, body = self.request("GET", "/api/vendors")
+        self.assert_no_store(headers)
+        status, headers, body = self.request("GET", "/api/vendors")
         self.assertEqual(status, 200)
+        self.assert_no_store(headers)
         json.loads(body)
         self.assertIn(b"panda", body)
         self.assertIn(b"natural-free-token", body)
@@ -250,6 +255,7 @@ class DebugToolHTTPTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("text/html", headers.get("Content-Type", ""))
         self.assertIn(b"<html", body.lower())
+        self.assert_no_store(headers)
 
     def test_generates_result_without_exposing_tokens_in_headers_or_logs(self) -> None:
         token = sign(source_payload())
@@ -274,54 +280,69 @@ class DebugToolHTTPTests(unittest.TestCase):
             self.assertIn("error", json.loads(body))
             self.assert_no_store(headers)
         status, headers, body = self.request("POST", "/api/generate", "{", {
-            "Content-Type": "application/json", "X-Debug-Tool": "1",
+            "Content-Type": "application/json",
         })
         self.assertEqual(status, 400)
         self.assertIn("error", json.loads(body))
         self.assert_no_store(headers)
 
-    def test_requires_ui_marker_and_rejects_cross_origin(self) -> None:
+    def test_accepts_cross_origin_requests_without_ui_marker(self) -> None:
         for headers in (
             {"Content-Type": "application/json"},
             {"Content-Type": "application/json", "X-Debug-Tool": "wrong"},
-            {"Content-Type": "application/json", "X-Debug-Tool": "1", "Origin": "https://untrusted.example"},
+            {"Content-Type": "application/json", "Origin": "https://another-site.example", "Sec-Fetch-Site": "cross-site"},
+            {"Content-Type": "application/json", "Origin": "null"},
         ):
             with self.subTest(headers=headers):
                 status, response_headers, body = self.generate(headers=headers)
-                self.assertEqual(status, 403)
-                self.assertIn("error", json.loads(body))
+                self.assertEqual(status, 200)
+                self.assertIn("token", json.loads(body))
                 self.assert_no_store(response_headers)
-        status, _, _ = self.generate(headers={
-            "Content-Type": "application/json", "X-Debug-Tool": "1",
-            "Origin": "http://127.0.0.1:" + str(self.port),
+
+    def test_options_allows_cross_origin_json_generation(self) -> None:
+        status, headers, body = self.request("OPTIONS", "/api/generate", headers={
+            "Host": "tools.example",
+            "Origin": "https://another-site.example",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
         })
-        self.assertEqual(status, 200)
+        self.assertEqual(status, 204)
+        self.assertEqual(body, b"")
+        normalized = {key.lower(): value for key, value in headers.items()}
+        self.assertIn("POST", normalized.get("access-control-allow-methods", ""))
+        self.assertIn("content-type", normalized.get("access-control-allow-headers", "").lower())
+        self.assert_no_store(headers)
 
     def test_rejects_wrong_content_type_and_oversized_request(self) -> None:
-        status, _, body = self.generate(headers={"Content-Type": "text/plain", "X-Debug-Tool": "1"})
+        status, headers, body = self.generate(headers={"Content-Type": "text/plain"})
         self.assertEqual(status, 415)
         self.assertIn("error", json.loads(body))
+        self.assert_no_store(headers)
         status, headers, body = self.request("POST", "/api/generate", "x" * (64 * 1024 + 1), {
-            "Content-Type": "application/json", "X-Debug-Tool": "1",
+            "Content-Type": "application/json",
         })
         self.assertEqual(status, 413)
         self.assertIn("error", json.loads(body))
         self.assert_no_store(headers)
 
-    def test_rejects_rebinding_host_even_with_matching_origin(self) -> None:
+    def test_accepts_arbitrary_host_for_get_and_post(self) -> None:
         host = "arbitrary.example:" + str(self.port)
+        status, headers, body = self.request("GET", "/api/health", headers={"Host": host})
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body), {"ok": True})
+        self.assert_no_store(headers)
         status, headers, body = self.generate(headers={
-            "Content-Type": "application/json", "X-Debug-Tool": "1",
+            "Content-Type": "application/json",
             "Host": host, "Origin": "http://" + host,
         })
-        self.assertEqual(status, 403)
-        self.assertIn("error", json.loads(body))
+        self.assertEqual(status, 200)
+        self.assertIn("token", json.loads(body))
         self.assert_no_store(headers)
 
     def test_accepts_localhost_host_with_matching_origin(self) -> None:
         host = "localhost:" + str(self.port)
         status, headers, body = self.generate(headers={
-            "Content-Type": "application/json", "X-Debug-Tool": "1",
+            "Content-Type": "application/json",
             "Host": host, "Origin": "http://" + host,
         })
         self.assertEqual(status, 200)

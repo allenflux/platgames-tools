@@ -5,9 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from ipaddress import ip_address
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -40,19 +38,15 @@ class DebugToolHandler(BaseHTTPRequestHandler):
 
     def _respond(self, status: int, body: bytes, content_type: str):
         self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(body)))
+        if status != 204:
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("X-Frame-Options", "DENY")
-        self.send_header(
-            "Content-Security-Policy",
-            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; "
-            "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
-        )
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Debug-Tool")
         self.end_headers()
-        if self.command != "HEAD":
+        if self.command != "HEAD" and status != 204:
             self.wfile.write(body)
 
     def _json(self, status: int, payload: dict):
@@ -61,29 +55,7 @@ class DebugToolHandler(BaseHTTPRequestHandler):
     def send_error(self, code, message=None, explain=None):
         self._json(code, {"error": "请求无法处理。"})
 
-    def _check_host(self) -> bool:
-        try:
-            host = self.headers.get("Host", "")
-            parsed = urlsplit("http://" + host)
-            hostname = parsed.hostname
-            if not hostname or parsed.username is not None or parsed.path or parsed.query or parsed.fragment:
-                raise ValueError
-            if parsed.port is not None and not 1 <= parsed.port <= 65535:
-                raise ValueError
-            allowed = hostname.lower() in self.server.allowed_hosts
-            if not allowed and self.server.allow_ip_hosts:
-                ip_address(hostname)
-                allowed = True
-            if not allowed:
-                raise ValueError
-        except ValueError:
-            self._json(403, {"error": "此访问地址未配置，请使用服务启动时显示的地址。"})
-            return False
-        return True
-
     def do_GET(self):
-        if not self._check_host():
-            return
         path = urlsplit(self.path).path
         if path == "/api/health":
             self._json(200, {"ok": True})
@@ -103,22 +75,12 @@ class DebugToolHandler(BaseHTTPRequestHandler):
     def do_HEAD(self):
         self.do_GET()
 
+    def do_OPTIONS(self):
+        self._respond(204, b"", "")
+
     def do_POST(self):
-        if not self._check_host():
-            return
         if urlsplit(self.path).path != "/api/generate":
             self._json(404, {"error": "接口不存在。"})
-            return
-        # A marker header forces cross-origin browsers through a preflight;
-        # this service deliberately grants no cross-origin access.
-        origin = self.headers.get("Origin")
-        if self.headers.get("X-Debug-Tool") != "1" or (
-            origin is not None and origin not in (
-                "http://" + self.headers.get("Host", ""),
-                "https://" + self.headers.get("Host", ""),
-            )
-        ) or self.headers.get("Sec-Fetch-Site") == "cross-site":
-            self._json(403, {"error": "请从调试工具页面提交请求。"})
             return
         if self.headers.get_content_type() != "application/json":
             self._json(415, {"error": "请求必须使用 application/json。"})
@@ -158,30 +120,20 @@ class DebugToolHandler(BaseHTTPRequestHandler):
             self._json(200, result)
 
 
-def create_server(
-    host: str = "127.0.0.1", port: int = 9100, *, allowed_hosts: tuple[str, ...] = ()
-) -> ThreadingHTTPServer:
-    server = ThreadingHTTPServer((host, port), DebugToolHandler)
-    server.allowed_hosts = {"localhost", "127.0.0.1", host.lower(), *(value.lower() for value in allowed_hosts)}
-    server.allow_ip_hosts = host == "0.0.0.0"
-    return server
+def create_server(host: str = "127.0.0.1", port: int = 9100) -> ThreadingHTTPServer:
+    return ThreadingHTTPServer((host, port), DebugToolHandler)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1", help="listen address (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=9100, help="listen port (default: 9100)")
-    parser.add_argument(
-        "--allow-host", action="append",
-        default=[value.strip() for value in os.environ.get("PANDA_TOOL_ALLOWED_HOSTS", "").split(",") if value.strip()],
-        help="allow an additional reverse-proxy hostname",
-    )
     args = parser.parse_args()
     from panda_jwt import PUBLIC_KEY
     if not PUBLIC_KEY:
-        parser.exit(1, "服务启动失败：请配置 PANDA_JWT_SECRET 或 .panda_signing_key。\n")
+        parser.exit(1, "服务启动失败：请配置 config/private/panda_signing.key 或 PANDA_JWT_SECRET。\n")
     try:
-        server = create_server(args.host, args.port, allowed_hosts=tuple(args.allow_host))
+        server = create_server(args.host, args.port)
     except OSError as exc:
         parser.exit(1, f"服务启动失败：{exc}\n")
     print(f"厂商调试工具已启动：http://{args.host}:{server.server_port}", flush=True)

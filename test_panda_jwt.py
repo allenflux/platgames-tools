@@ -13,30 +13,32 @@ import panda_jwt
 
 
 class PandaJWTTests(unittest.TestCase):
-    def test_environment_key_takes_precedence_over_local_file(self) -> None:
+    def test_environment_key_takes_precedence_over_file_and_vendor_config(self) -> None:
         with patch.dict(os.environ, {"PANDA_JWT_SECRET": "synthetic-environment-key", "PANDA_JWT_SECRET_FILE": "/run/secrets/ignored"}), patch.object(Path, "read_text") as read:
             self.assertEqual(panda_jwt._load_key(), "synthetic-environment-key")
             read.assert_not_called()
 
-    def test_local_file_is_used_without_environment_key(self) -> None:
-        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": ""}), patch.object(Path, "read_text", autospec=True, return_value="synthetic-file-key\n") as read:
-            self.assertEqual(panda_jwt._load_key(), "synthetic-file-key")
-            read.assert_called_once_with(Path(panda_jwt.__file__).with_name(".panda_signing_key"), encoding="utf-8")
+    def test_vendor_config_file_is_resolved_relative_to_project_root(self) -> None:
+        relative_file = "config/private/panda_signing.key"
+        expected_file = Path(panda_jwt.__file__).resolve().parent / relative_file
+        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": ""}), patch.dict(panda_jwt.PANDA_CONFIG, {"signing_key_file": relative_file}), patch.object(Path, "read_text", autospec=True, return_value="synthetic-project-key\n") as read:
+            self.assertEqual(panda_jwt._load_key(), "synthetic-project-key")
+            read.assert_called_once_with(expected_file, encoding="utf-8")
 
     def test_configured_secret_file_takes_precedence_over_default(self) -> None:
         key_file = "/run/secrets/panda_jwt_secret"
-        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": key_file}), patch.object(Path, "read_text", autospec=True, return_value="synthetic-docker-key\n") as read:
+        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": key_file}), patch.dict(panda_jwt.PANDA_CONFIG, {"signing_key_file": "config/private/panda_signing.key"}), patch.object(Path, "read_text", autospec=True, return_value="synthetic-docker-key\n") as read:
             self.assertEqual(panda_jwt._load_key(), "synthetic-docker-key")
             read.assert_called_once_with(Path(key_file), encoding="utf-8")
 
     def test_missing_configured_secret_does_not_fall_back_to_another_key(self) -> None:
         key_file = "/run/secrets/missing"
-        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": key_file}), patch.object(Path, "read_text", autospec=True, side_effect=FileNotFoundError) as read:
+        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": key_file}), patch.dict(panda_jwt.PANDA_CONFIG, {"signing_key_file": "config/private/panda_signing.key"}), patch.object(Path, "read_text", autospec=True, side_effect=FileNotFoundError) as read:
             self.assertEqual(panda_jwt._load_key(), "")
             read.assert_called_once_with(Path(key_file), encoding="utf-8")
 
     def test_missing_configuration_fails_clearly_without_exposing_token(self) -> None:
-        with patch.dict(os.environ, {"PANDA_JWT_SECRET": ""}), patch.object(Path, "read_text", side_effect=FileNotFoundError):
+        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": ""}), patch.dict(panda_jwt.PANDA_CONFIG, {"signing_key_file": ""}):
             self.assertEqual(panda_jwt._load_key(), "")
         with patch.object(panda_jwt, "PUBLIC_KEY", ""):
             with self.assertRaisesRegex(ValueError, "PANDA_JWT_SECRET"):
@@ -44,6 +46,13 @@ class PandaJWTTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "PANDA_JWT_SECRET") as error:
                 panda_jwt.jwt_decode("private-synthetic-token")
             self.assertNotIn("private-synthetic-token", str(error.exception))
+
+    def test_missing_project_key_file_leaves_signer_unconfigured(self) -> None:
+        relative_file = "config/private/panda_signing.key"
+        expected_file = Path(panda_jwt.__file__).resolve().parent / relative_file
+        with patch.dict(os.environ, {"PANDA_JWT_SECRET": "", "PANDA_JWT_SECRET_FILE": ""}), patch.dict(panda_jwt.PANDA_CONFIG, {"signing_key_file": relative_file}), patch.object(Path, "read_text", autospec=True, side_effect=FileNotFoundError) as read:
+            self.assertEqual(panda_jwt._load_key(), "")
+            read.assert_called_once_with(expected_file, encoding="utf-8")
 
     def test_round_trip_preserves_expired_source_payload(self) -> None:
         payload = {"exp": 1, "iat": 0, "body": {"token": "synthetic-session", "name": "测试"}}

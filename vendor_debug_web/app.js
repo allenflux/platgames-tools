@@ -146,7 +146,7 @@
         method: "POST",
         credentials: "same-origin",
         cache: "no-store",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "X-Debug-Tool": "1" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ vendor: vendorSelect.value, tool: selectedTool().id, url: input, validity: validitySelect.value }),
         signal: controller.signal,
       });

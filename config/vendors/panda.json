@@ -1,0 +1,217 @@
+{
+  "signing_key_file": "config/private/panda_signing.key",
+  "test_app_keys": [
+    "SHYFBTESTMCH9057"
+  ],
+  "natural_free_mode": "force_natural_free_v1",
+  "game_scope": "all",
+  "default_days": 30,
+  "max_days": 90,
+  "no_expiry_timestamp": 253402300799,
+  "games": {
+    "11": {
+      "name": "prosperity-rabbit",
+      "desc": "繁荣兔(Prosperity Rabbit)"
+    },
+    "12": {
+      "name": "prosperity-ox",
+      "desc": "富贵牛(Prosperity Ox)"
+    },
+    "13": {
+      "name": "prosperity-dragon-golden-reel",
+      "desc": "富贵龙-黄金转轴(Prosperity Dragon Golden Reel)"
+    },
+    "14": {
+      "name": "swaggy-caramelo",
+      "desc": "酷炫卡拉梅洛(Swaggy Caramelo)"
+    },
+    "15": {
+      "name": "fortune-pig",
+      "desc": "招财猪(Fortune Pig)"
+    },
+    "16": {
+      "name": "the-lucky-year",
+      "desc": "幸运年(The Lucky Year)"
+    },
+    "17": {
+      "name": "swaggy-caramelo-super",
+      "desc": "酷炫卡拉梅洛超级大奖(Swaggy Caramalo Super Prize)"
+    },
+    "18": {
+      "name": "prosperity-mouse",
+      "desc": "富贵鼠(Prosperity Mouse)"
+    },
+    "19": {
+      "name": "rudolphs-gift",
+      "desc": "鲁道夫的礼物(Rudolphs Gift)"
+    },
+    "20": {
+      "name": "prosperity-tiger",
+      "desc": "繁荣虎(Prosperity Tiger)"
+    },
+    "21": {
+      "name": "smash-fury",
+      "desc": "狂怒冲击(Smash Fury)"
+    },
+    "22": {
+      "name": "aztecs-mystery",
+      "desc": "阿兹特克之谜(Aztecs Mystery)"
+    },
+    "23": {
+      "name": "prosperity-horse",
+      "desc": "繁荣骏马(Prosperity Horse)"
+    },
+    "24": {
+      "name": "lucky-panda",
+      "desc": "幸运熊猫(Lucky Panda)"
+    },
+    "25": {
+      "name": "iron-valor",
+      "desc": "铁血荣耀(Iron Valor)"
+    },
+    "26": {
+      "name": "shapes-of-fortune",
+      "desc": "财富之形(Shapes of Fortune)"
+    },
+    "27": {
+      "name": "lucky-caramelo-1000",
+      "desc": "幸运卡拉梅洛1000(Lucky Caramelo 1000)"
+    },
+    "28": {
+      "name": "money-mania",
+      "desc": "金钱狂潮(Money Mania)"
+    },
+    "29": {
+      "name": "prosperity-dragon",
+      "desc": "富贵龙(Prosperity Dragon)"
+    },
+    "30": {
+      "name": "pirates-treasure-reel",
+      "desc": "海盗宝藏之轮(Pirates Treasure Reel)"
+    },
+    "31": {
+      "name": "lucky-snake",
+      "desc": "幸运蛇(Lucky Snake)"
+    },
+    "32": {
+      "name": "treasures-of-hades",
+      "desc": "哈迪斯宝藏(Treasures Of Hades)"
+    },
+    "33": {
+      "name": "golden-koi-trail",
+      "desc": "黄金锦鲤之道(Golden Koi Trail)"
+    },
+    "34": {
+      "name": "lucky-turtle",
+      "desc": "幸运龟(Lucky Turtle)"
+    },
+    "35": {
+      "name": "realm-of-thunder",
+      "desc": "雷霆领域(Realm Of Thunder)"
+    },
+    "36": {
+      "name": "the-lone-fireball",
+      "desc": "火焰火球(The Lone Fireball)"
+    },
+    "37": {
+      "name": "black-assassin",
+      "desc": "黑色刺客(Black Assassin)"
+    },
+    "38": {
+      "name": "lucky-fox",
+      "desc": "幸运狐(Lucky Fox)"
+    },
+    "39": {
+      "name": "eggy-pop",
+      "desc": "爆蛋狂花(Eggy Pop)"
+    },
+    "40": {
+      "name": "tinkering-box",
+      "desc": "奇巧宝盒(Tinkering Box)"
+    },
+    "41": {
+      "name": "farmageddon",
+      "desc": "法玛格登(Farmageddon)"
+    },
+    "42": {
+      "name": "fiesta-green",
+      "desc": "绿色狂欢(Fiesta Green)"
+    },
+    "43": {
+      "name": "gold-diggers",
+      "desc": "淘金者(Gold Diggers)"
+    },
+    "44": {
+      "name": "magic-circus",
+      "desc": "奇幻马戏团(Magic Circus)"
+    },
+    "45": {
+      "name": "solar-pong",
+      "desc": "太阳之击(Solar Pong)"
+    },
+    "46": {
+      "name": "lucky-caramelo-2",
+      "desc": "幸运卡拉梅洛 2(Lucky Caramelo 2)"
+    },
+    "47": {
+      "name": "fiesta-magenta",
+      "desc": "洋红狂欢(Fiesta Magenta)"
+    },
+    "48": {
+      "name": "fiesta-red",
+      "desc": "红色狂欢(Fiesta Red)"
+    },
+    "49": {
+      "name": "battleship",
+      "desc": "战舰(Battleship)"
+    },
+    "50": {
+      "name": "fiesta-blue",
+      "desc": "蓝色狂欢(Fiesta Blue)"
+    },
+    "51": {
+      "name": "lucky-duck",
+      "desc": "幸运鸡(Lucky Duck)"
+    },
+    "52": {
+      "name": "aquarius-fortune-wheel",
+      "desc": "水瓶座命运之轮(Aquarius Fortune Wheel)"
+    },
+    "53": {
+      "name": "capricorns-orb-of-fortune",
+      "desc": "摩羯座幸运宝石(Capricorns Orb of Fortune)"
+    },
+    "54": {
+      "name": "firecrackers-fortune",
+      "desc": "富贵爆竹(Firecrackers Fortune)"
+    },
+    "55": {
+      "name": "firecrackers-fortune-100",
+      "desc": "爆竹好运100(Firecrackers Fortune 100)"
+    },
+    "56": {
+      "name": "inmate-outcuss",
+      "desc": "亡命囚徒(The Inmate OutCuss)"
+    },
+    "57": {
+      "name": "pisces-realm-of-fortune",
+      "desc": "双鱼座幸运领域(Pisces Realm Of Fortune)"
+    },
+    "58": {
+      "name": "disco-fever",
+      "desc": "迪斯科狂潮(Disco Fever)"
+    },
+    "59": {
+      "name": "shapes-of-fortune-xmas",
+      "desc": "圣诞幸运之形(Shapes of Fortune Xmas)"
+    },
+    "60": {
+      "name": "wheel-of-wealth",
+      "desc": "财富之轮(Wheel Of Wealth)"
+    },
+    "61": {
+      "name": "year-of-the-golden-horse",
+      "desc": "金马之年(Year Of The Golden Horse)"
+    }
+  }
+}

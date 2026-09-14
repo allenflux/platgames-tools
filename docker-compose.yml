@@ -5,14 +5,13 @@ services:
     ports:
       - "${TOOLS_BIND_IP:-0.0.0.0}:9100:9100"
     command: ["python3", "vendor_debug_server.py", "--host", "0.0.0.0", "--port", "9100"]
-    environment:
-      PANDA_JWT_SECRET_FILE: /run/secrets/panda_jwt_secret
-      PANDA_TOOL_ALLOWED_HOSTS: "${PANDA_TOOL_ALLOWED_HOSTS:-}"
-    secrets:
-      - panda_jwt_secret
-    read_only: true
-    security_opt:
-      - no-new-privileges:true
+    volumes:
+      - type: bind
+        source: ./config/private/panda_signing.key
+        target: /app/config/private/panda_signing.key
+        read_only: true
+        bind:
+          create_host_path: false
     restart: unless-stopped
     healthcheck:
       test:
@@ -24,7 +23,3 @@ services:
       timeout: 5s
       start_period: 5s
       retries: 3
-
-secrets:
-  panda_jwt_secret:
-    file: ./.panda_signing_key

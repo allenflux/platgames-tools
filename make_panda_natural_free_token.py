@@ -23,14 +23,16 @@ import sys
 import time
 
 import panda_jwt as jwt_encode
+from vendor_config import PANDA_CONFIG
 
 
-MODE = "force_natural_free_v1"
-DEFAULT_DAYS = 30
-MAX_DAYS = 90
+MODE = PANDA_CONFIG["natural_free_mode"]
+DEFAULT_DAYS = PANDA_CONFIG["default_days"]
+MAX_DAYS = PANDA_CONFIG["max_days"]
 # Latest whole second in year 9999; accepted by the existing server checks.
-NO_EXPIRY_TIMESTAMP = 253402300799
-TEST_APP_KEY = "SHYFBTESTMCH9057"
+NO_EXPIRY_TIMESTAMP = PANDA_CONFIG["no_expiry_timestamp"]
+TEST_APP_KEYS = frozenset(PANDA_CONFIG["test_app_keys"])
+TEST_APP_KEY = PANDA_CONFIG["test_app_keys"][0]
 
 
 def issue_token(
@@ -45,7 +47,7 @@ def issue_token(
     payload = jwt_encode.jwt_decode(source_token, jwt_encode.PUBLIC_KEY)
     if not isinstance(payload, dict):
         raise ValueError("source token payload is invalid")
-    if payload.get("app_key") != TEST_APP_KEY:
+    if payload.get("app_key") not in TEST_APP_KEYS:
         raise ValueError("source token must belong to the supported Panda test merchant")
     body = payload.get("body")
     if not isinstance(body, dict):
@@ -64,7 +66,7 @@ def issue_token(
     issued_body = copy.deepcopy(body)
     issued_body["panda_test"] = {
         "mode": MODE,
-        "games": "all",
+        "games": PANDA_CONFIG["game_scope"],
         "expires_at": expires_at,
         "token_id": secrets.token_urlsafe(12),
     }
