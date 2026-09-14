@@ -26,7 +26,7 @@ python3 vendor_debug_server.py --host 0.0.0.0 --port 9100
 
 ## Docker Compose 部署
 
-项目中的 `docker-compose.yml` 使用 **9100:9100** 端口映射，包含健康检查和自动重启。
+项目中的 `docker-compose.yml` 对外端口为 **9100**、容器端口为 **9100**，包含健康检查和自动重启。服务器默认监听所有网卡；本机预览可通过 `TOOLS_BIND_IP=127.0.0.1` 限定监听地址。
 
 将整个独立项目放到部署机器，例如 `/opt/platgames-tools`，并单独带上隐藏文件 `.panda_signing_key`（上传工具不要漏掉点文件）。该文件不能进入镜像或版本库。
 
@@ -39,7 +39,11 @@ docker compose ps
 docker compose logs -f --tail=100 platgames-tools
 ```
 
-浏览器打开 `http://服务器IP:9100`。本机 Docker 部署则打开 <http://127.0.0.1:9100>。
+浏览器打开 `http://服务器IP:9100`。本机 Docker 预览用以下命令启动，然后打开 <http://127.0.0.1:9100>：
+
+```sh
+TOOLS_BIND_IP=127.0.0.1 docker compose up -d --build
+```
 
 更新代码后重新执行 `docker compose up -d --build`。停止服务：
 

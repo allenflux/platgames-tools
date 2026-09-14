@@ -1,0 +1,11 @@
+# Only application source and web assets enter the image build context.
+# In particular, .panda_signing_key is mounted by Compose, never copied.
+**
+!Dockerfile
+!.dockerignore
+!vendor_debug_server.py
+!vendor_debug_tokens.py
+!make_panda_natural_free_token.py
+!panda_jwt.py
+!vendor_debug_web/
+!vendor_debug_web/**

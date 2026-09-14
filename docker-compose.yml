@@ -1,0 +1,30 @@
+services:
+  platgames-tools:
+    build:
+      context: .
+    ports:
+      - "${TOOLS_BIND_IP:-0.0.0.0}:9100:9100"
+    command: ["python3", "vendor_debug_server.py", "--host", "0.0.0.0", "--port", "9100"]
+    environment:
+      PANDA_JWT_SECRET_FILE: /run/secrets/panda_jwt_secret
+      PANDA_TOOL_ALLOWED_HOSTS: "${PANDA_TOOL_ALLOWED_HOSTS:-}"
+    secrets:
+      - panda_jwt_secret
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import json, urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:9100/api/health', timeout=3))['ok'] is True"
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
+secrets:
+  panda_jwt_secret:
+    file: ./.panda_signing_key

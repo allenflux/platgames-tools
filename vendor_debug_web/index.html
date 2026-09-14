@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="no-referrer">
+  <title>Panda · 游戏调试工具</title>
+  <link rel="icon" href="/icon.png" type="image/png">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到工具</a>
+  <div class="app-shell">
+    <header class="page-header">
+      <div class="heading-copy">
+        <a class="brand" href="/" aria-label="游戏调试工具首页"><img src="/icon.png" alt="" width="36" height="36"><span>游戏调试工具</span></a>
+        <h1><span id="breadcrumb-vendor">Panda</span> → 自然免费调试 <span class="badge">内部调试</span></h1>
+        <p class="subtitle">粘贴当前游戏链接，生成新的自然免费调试 Token 与游戏链接。</p>
+      </div>
+      <div class="header-controls">
+        <div class="vendor-picker"><label for="vendor-select">厂商</label><select id="vendor-select" disabled><option value="panda">Panda</option></select></div>
+        <div class="service-status is-pending"><span class="status-dot" aria-hidden="true"></span><span id="service-status-text">正在连接调试服务</span></div>
+      </div>
+    </header>
+    <nav class="tool-nav" aria-label="当前厂商可用工具"><a class="tool-tab" href="#main" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9"/></svg><span id="sidebar-tool-name">自然免费调试 Token</span></a></nav>
+    <main id="main">
+      <div id="catalog-error" class="message message-error" role="alert" hidden><span id="catalog-error-text"></span><button class="text-button" id="retry-catalog" type="button">重新加载</button></div>
+      <section class="help-card" aria-labelledby="help-title"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7v.1"/></svg><div><h2 id="help-title">适用场景</h2><p>为 Panda 游戏生成自然免费调试链接，进入游戏后通过普通旋转触发免费局。游戏需支持该模式，并已配置自然免费结果包。</p><p id="session-help" class="session-help">请使用当前能正常进入游戏的完整链接。Token 仍绑定登录会话，<strong>重新登录或会话失效后，需要用新链接再次生成。</strong></p></div></section>
+      <section class="card input-card" aria-labelledby="input-title">
+        <div class="card-header"><div><div class="step-label">步骤 1</div><h2 id="input-title">生成自然免费调试链接</h2></div><button class="text-button" id="clear-button" type="button">清空输入</button></div>
+        <form id="generate-form" novalidate>
+          <label class="field-label" for="game-url">当前游戏 URL <span class="badge badge-subtle" id="vendor-badge">Panda</span></label>
+          <textarea id="game-url" name="url" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-describedby="url-description session-help" placeholder="https://panda-test.example.com/game/index.html?…&amp;token=…" required></textarea>
+          <p class="field-description" id="url-description">复制浏览器地址栏中的完整链接，需包含 token 参数。也支持直接粘贴 Markdown 格式的链接。</p>
+          <div class="settings-row"><div class="validity-field"><label class="field-label" for="validity">Token 有效期</label><select id="validity" name="validity"><option value="long_term">长期 · 至 9999 年</option><option value="30_days">30 天</option><option value="90_days">90 天</option></select></div><p class="validity-note">长期有效仅指 Token 到期时间，<br>原登录会话仍需有效。</p></div>
+          <div id="form-message" class="message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+          <button id="generate-button" class="button button-primary generate-button" type="submit" disabled><span class="button-spinner" aria-hidden="true" hidden></span><svg class="button-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9"/></svg><span id="generate-label">生成调试链接</span></button>
+        </form>
+      </section>
+      <section class="card result-card" aria-labelledby="result-title" aria-busy="false">
+        <div class="card-header"><div><div class="step-label">步骤 2</div><h2 id="result-title">使用新的游戏链接</h2></div><span id="result-badge" class="badge badge-success" hidden>已生成</span></div>
+        <div id="result-empty" class="empty-state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 13 4-4m-6 7-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 1 1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(1 0)"/></svg><div><strong>等待生成调试链接</strong><p>生成后可复制完整链接、单独复制 Token，或直接打开游戏。</p></div></div>
+        <div id="result-content" hidden>
+          <div class="result-summary"><span class="status-dot" aria-hidden="true"></span><strong>新的调试链接已生成</strong><span id="result-meta"></span></div>
+          <div class="output-grid"><div><div class="output-heading"><label class="field-label" for="result-url">新游戏链接</label><button id="copy-url" class="text-button" type="button">复制链接</button></div><textarea id="result-url" class="output-field" readonly rows="5" spellcheck="false" aria-label="生成的新游戏链接"></textarea></div><div><div class="output-heading"><label class="field-label" for="result-token">调试 Token</label><button id="copy-token" class="text-button" type="button">复制 Token</button></div><textarea id="result-token" class="output-field" readonly rows="5" spellcheck="false" aria-label="生成的调试 Token"></textarea></div></div>
+          <a id="open-game" class="button button-primary open-game" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6m0-6L10 14M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>打开游戏</a>
+          <p class="result-note" id="result-note">已生成调试 Token，未在线验证登录会话。</p>
+        </div>
+      </section>
+      <p class="page-footnote">仅替换输入链接中的 Token，保留游戏地址与其他参数。链接与 Token 不保存在浏览器中。</p>
+    </main>
+    <footer class="brand-signature">Panda · 游戏调试工具</footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+</body>
+</html>
